@@ -1,0 +1,126 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/**'
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    # 只在main分支触发
+    if: github.ref == 'refs/heads/main'
+    
+    environment:
+      name: production
+      url: https://your-domain.com # 替换为实际域名
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+      
+      # === 选项1: 部署到Vercel ===
+      - name: Deploy to Vercel
+        if: false # 启用时改为 true
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          npm install -g vercel
+          vercel --prod --token=$VERCEL_TOKEN
+      
+      # === 选项2: 部署到Railway ===
+      - name: Deploy to Railway
+        if: false # 启用时改为 true
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          npm install -g @railway/cli
+          railway up
+      
+      # === 选项3: 部署到自建服务器 ===
+      - name: Deploy to VPS via SSH
+        if: false # 启用时改为 true
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /app/flight-booking-service
+            git pull origin main
+            npm install
+            npm run build
+            pm2 restart flight-booking
+      
+      # === 选项4: 部署Docker到服务器 ===
+      - name: Build and push Docker image
+        if: false # 启用时改为 true
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            your-registry/flight-booking:latest
+            your-registry/flight-booking:${{ github.sha }}
+      
+      - name: Deploy notification
+        if: success()
+        run: |
+          echo "✅ Deployment successful!"
+          # 可以添加Slack/Discord通知
+      
+      - name: Deployment failed
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          # 可以添加告警通知
+
+  # 健康检查
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Wait for deployment
+        run: sleep 30
+      
+      - name: Check service health
+        run: |
+          # 替换为实际的健康检查端点
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://your-domain.com/health)
+          if [ $response -eq 200 ]; then
+            echo "✅ Service is healthy"
+          else
+            echo "❌ Health check failed (HTTP $response)"
+            exit 1
+          fi
+      
+      - name: Verify Slack integration
+        if: false # 启用时改为 true
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST $SLACK_WEBHOOK_URL \
+            -H 'Content-Type: application/json' \
+            -d '{"text":"✅ Flight Booking Service deployed successfully!"}'
