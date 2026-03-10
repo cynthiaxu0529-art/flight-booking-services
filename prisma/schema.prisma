@@ -1,0 +1,42 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 临时订单表 - 用于Slack交互状态管理
+model TempOrder {
+  id            String   @id @default(uuid())
+  slackUserId   String
+  slackChannel  String
+  
+  // 搜索结果
+  routingId     String
+  sessionId     String?
+  
+  // 航班信息快照
+  flightData    Json     // 存储航班详情,避免重复调用API
+  
+  // 状态
+  status        String   @default("searching") // searching, verified, ordering, paying, completed
+  
+  // 支付
+  paymentLinkId String?
+  
+  // Atlas订单
+  atlasOrderNo  String?
+  
+  // 过期时间
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([slackUserId])
+  @@index([expiresAt])
+}
