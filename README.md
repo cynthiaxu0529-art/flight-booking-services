@@ -1,6 +1,20 @@
 # Flight Booking Service
 
+[![CI](https://github.com/cynthiaxu0529-art/flight-booking-services/actions/workflows/ci.yml/badge.svg)](https://github.com/cynthiaxu0529-art/flight-booking-services/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
+
 Slack Bot for Atlas API flight booking with USDC payments and auto-reimbursement.
+
+**Status:** 🚧 Phase 1 - In Development
+
+## 📚 Documentation
+
+- **[Quick Start Guide](./QUICKSTART.md)** - Get started in 5 minutes ⭐
+- **[Atlas API Setup](./docs/ATLAS_API_SETUP.md)** - Apply for API credentials
+- **[Slack App Setup](./docs/SLACK_APP_SETUP.md)** - Configure Slack Bot
+- **[Architecture](./ARCHITECTURE.md)** - System design and data flow
 
 ## Features
 
